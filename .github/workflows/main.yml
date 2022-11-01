@@ -1,0 +1,48 @@
+name: Testing for GitLab with Cypress and Cucumber
+on:
+  push:
+    branches: master
+  pull_request:
+    branches: master
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '14.x'
+    - name: Install dependencies
+      run: npm ci
+    - name: Install preprocessor
+      run: npm run cypress:proc
+    - name: Run all tests
+      run: npm run cypress:run
+    - uses: actions/checkout@v2
+      if: always()
+      with:
+        repository: txt2021/GitLab_Testing_Cypress-Cucumber_HTMLreport
+        ref:  report
+        path: ./docs
+    - uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: report
+        path: html-report/
+        retention-days: 30
+    - name: Push to repository
+      uses: cpina/github-action-push-to-another-repository@main
+      if: always()
+      env:
+        API_TOKEN_GITHUB: ${{ secrets.ACTIONS_TOKEN }}
+      with:
+        source-directory: 'html-report'
+        destination-github-username: 'txt2021'
+        destination-repository-name: 'GitLab_Testing_Cypress-Cucumber_HTMLreport'
+        user-email: txt2021@gmail.com
+        target-branch: report
+
+
+
+
